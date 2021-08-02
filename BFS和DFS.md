@@ -158,3 +158,73 @@ public:
 };
 ```
 
+#### 01矩阵
+
+==图的多源BFS==
+
+**题目**
+
+- 给定一个由 0 和 1 组成的矩阵 mat ，请输出一个大小相同的矩阵，其中每一个格子是 mat 中对应位置元素到最近的 0 的距离。
+
+- 两个相邻元素间的距离为 1
+
+- **示例 1：**
+
+  ![img](https://pic.leetcode-cn.com/1626667201-NCWmuP-image.png)
+
+  ```c++
+  输入：mat = [[0,0,0],[0,1,0],[0,0,0]]
+  输出：[[0,0,0],[0,1,0],[0,0,0]]
+  ```
+
+**示例 2：**
+
+![img](https://pic.leetcode-cn.com/1626667205-xFxIeK-image.png)
+
+```
+输入：mat = [[0,0,0],[0,1,0],[1,1,1]]
+输出：[[0,0,0],[0,1,0],[1,2,1]]
+```
+
+**解题思路**
+
+- 本题考察的是多源BFS。在看题解之前，我使用了暴力解法，即遍历所有点，对每个点使用BFS，最终结果显然超时。本题在进行BFS前，先让所有的0都入队列。我们可以从下两个方面理解。
+  第一：先让所有0入队列，意味着我们会先对这些0做BFS，且每次只进行一层，然后将这一层中遇到的可以进行BFS的位置加入队列，然后我们使用队列中的下一个0进行BFS。也就是说，对所有0进行BFS，等于我们对于距离每个0为1的点都进行了检测。因此不需要考虑在队列中进行BFS的0的顺序，因为不论我们使用哪个0，只要在第一层遍历中检测到了这个位置，那么这个位置的距离就是1。然后所有0出队列之后，我们再取点，相当于进行第二层检测。所以多源BFS可以理解为分层向四周扩散，每个dis[newx][newy] = dis[x][y] + 1.
+
+  第二：我们可以把所有0看成一个整体，如果所有0能看为一个整体的话，那么每个1距离0的最短距离就是这个1到这个整体的距离。所以我们可以将这个整体看作一个超级源点，这个超级源点与所有的0相连，且到所有0的距离都为0.这样的话，我们从这个超级源点开始做BFS，就能得到所有1到达这个超级源点的距离。从超级源点进行BFS的第一步就是将所有的0入队列，然后将超级源点从队列中清除。这就等价于直接将所有的0入队列，然后进行BFS。
+
+```c++
+#include<cstring>
+class Solution {
+public:
+    int dx[4] = {-1 , 0 , 0 , 1};
+    int dy[4] = {0 , -1 , 1 , 0};
+    vector<vector<int>> updateMatrix(vector<vector<int>>& mat) {
+        int n = mat.size() , m = mat[0].size();
+        vector<vector<int>> dist(n , vector<int>(m));
+        vector<vector<int>> visit(n , vector<int>(m));
+        queue<pair<int,int>> q;
+        for(int i = 0; i < n ; i++)
+            for(int j = 0 ; j < m ;j++)
+                if(mat[i][j] == 0) 
+                    q.emplace(i , j),visit[i][j] = 1;
+
+        while(!q.empty()){
+            int x = q.front().first , y = q.front().second;
+            q.pop();
+            for(int i = 0 ; i < 4 ; i++){
+                int newx = x + dx[i] , newy = y + dy[i];
+                if(newx >= 0 && newx < n && newy >= 0 && newy < m && !visit[newx][newy]){
+                    dist[newx][newy] = dist[x][y] + 1;
+                    q.emplace(newx , newy);
+                    visit[newx][newy] = 1;
+                }
+            }
+        }
+        return dist;
+    }
+};
+```
+
+
+
